@@ -1,0 +1,3066 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+    <style>
+
+        body { margin:0px;overflow:hidden; background: #4d4d4d;}
+        header { border:1px black solid; }
+        ::-moz-selection { background:transparent; }
+        ::selection { background:transparent; }
+
+        #toolbar {
+            padding: 5px;
+            padding-left:20px;
+            padding-right:20px;
+            position:absolute;
+            z-index:100100;
+            height:auto !important;
+            width:auto !important;
+            display: none !important;
+        }
+
+        .ui-button,  .ui-button-text .ui-button{
+            font-size: 12px !important;
+        //height: 20px;
+        //width: 10px;
+        //outline: none;
+        }
+
+
+        select, button {
+            border:1px solid gray;
+            margin:0;
+            padding:2 .6em; //updated
+        height:10.3em; //new
+        box-sizing:border-box; //new
+        cursor: pointer;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus,
+        button:focus {
+            outline: none;
+        }
+
+        #dialog {
+            font-size: 82.5%;
+            display: none;
+        }
+
+        .ui-dialog-title{
+            font-size: 62.5% !important;
+            text-align: left;
+        }
+
+
+        //button:active
+        //{background-color:white; outline: none;}
+        button:hover {cursor:pointer;}
+        .label {font-size: 12px; font-weight: normal; }
+        .radioB {border-radius: 30%; color: #9a9a9a;}
+        .radioB:hover{}
+        .radioB:active {background-color:white; outline: none;}
+        button:focus {outline:0;}
+
+        #loadCounter {
+
+            margin: auto;
+            width: 10%;
+            border: 0px solid #73AD21;
+            padding: 5px;
+            text-align: center;
+            color: white;
+            font-size:20px;
+        }
+
+    </style>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/i18n/jquery-ui-i18n.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+
+</head>
+
+<body onload=initialize()>
+<div id="dialog" title="Input stack info" style="visibility: visible">
+    <label for="name">Folder</label><br>
+    <input type="text" name="inputFolder" id="inputFolder"><br>
+    <label for="name">Pixelspacing</label><br>
+    <input type="text" placeholder="" name="inputPixelspacing" id="inputPixelspacing"><br>
+    <label for="name">No of slices</label><br>
+    <input type="text" name="inputSlices" id="inputSlices"><br>
+    <label for="name">Slice thickness</label><br>
+    <input type="text" name="inputST" id="inputST"><br>
+    <label for="name">Slice spacing</label><br>
+    <input type="text" name="inputSS" id="inputSS"><br>
+    <label for="name">Compression (1-10)</label><br>
+    <input type="text" value="1" name="inputCompression" id="inputCompression"><br>
+    <label for="name">Shrink (1-10)</label><br>
+    <input type="text" value="1" name="inputShrink" id="inputShrink"><br><br>
+    <label id="inputMessage"></label><br>
+
+</div>
+
+<div id="toolbar" style="cursor:move;display: none" class="ui-widget-header ui-corner-all" onmouseover="javascript:lastClick=null">
+    <div id="toolbarDiv" style="visibility: hidden">
+        <!--
+        <button>
+        <img src="MPR/rotate.png">
+        </button>
+
+        <i class="fa fa-cloud" style="font-size:12px;"></i>
+        <i class="fas fa-camera-retro fa-lg"></i>
+        <button><i class="fas fas fa-search fa-lg"></i></button>
+
+        <button><i class="fas fa-arrows-alt fa-lg"></i></button>
+
+        <button><i class="fas fa-sticky-note fa-lg"></i></button>
+
+        <button><i class="fas fa-spinner fa-lg"></i></button>
+
+        <button><i class="fas fa-crosshairs fa-lg"></i></button>
+
+        <button><i class="fas fa-sun fa-lg"></i></button>
+
+        <button><i class="fas fa-adjust fa-2x"></i>kkkkk</button>
+        -->
+        <button id="panButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('pan')">Pan</button>
+        <button id="zoomButton" class="radioB" type="button"onmousedown="javascript:toolbarMenuChoice('zoom')">Zoom</button>
+        <button id="scrollButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('scroll')">Scroll</button>
+        <button id="rotateButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('rotate')">Rotate</button>
+        <button id="rotate2Button" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('rotate2')">Rotate 2</button>
+        <button id="syncButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('sync')">Synchronize</button>
+        <button id="biasButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('bias')">Brightness</button>
+        <button id="gainButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('gain')">Contrast</button>
+        <button id="caliperButton" class="radioB" type="button" onmousedown="javascript:toolbarMenuChoice('caliper')">Caliper</button>
+
+        <button type="button" onmousedown="javascript:resetMatrix()">Reset</button>
+        <!-- <button id="interpolateButton" type="button" style="visibility: visible; color: #9a9a9a" onmousedown="javascript:WWSwivel(firstStack)">Interpolate</button> -->
+
+        <button id="projectButton" type="button" onmousedown="javascript:setProjection()">Projection technique</button>
+
+        <!-- <span id="projectionLabel" class="label">Avg</span> -->
+
+        <button class="projectButton" type="button" onmousedown="javascript:setProjectionWidthStack(firstStack,-1)"><</button>
+        <button class="projectButton" type="button" onmousedown="javascript:setProjectionWidthStack(firstStack,-5)"><<</button>
+        <!-- <span class="label" id="projectionWidthLabel">1 mm</span> -->
+        <button class="projectButton" type="button" onmousedown="javascript:setProjectionWidthStack(firstStack,5)">>></button>
+        <button class="projectButton" type="button" onmousedown="javascript:setProjectionWidthStack(firstStack,1)">></button>
+        <br>
+    </div>
+
+</div>
+
+<div id="loadCounter"></div>
+
+</body>
+
+
+<script>
+
+  // http://castlemountain.dk/test/sprayMPR17.html?slices=X&width=X&height=X&pixelspacing=X&ST=X&SS=X
+
+  var missingInput = false;
+
+  var iCompression = 1;
+  var iShrink = 1;
+  var folder = "";
+  var iWidth = "";
+  var iHeight = "";
+  var iPixelspacing = "";
+  var iSlices = "";
+  var iAxialST = "";
+  var iAxialSS = "";
+
+  tFolder =  getParameterByName("folder");
+  //tWidth = getParameterByName("width");
+  //tHeight = getParameterByName("height");
+  tPixelspacing = getParameterByName("pixelspacing");
+  tSlices = getParameterByName("slices");
+  tAxialST = getParameterByName("ST");
+  tAxialSS = getParameterByName("SS");
+  tCompression = getParameterByName("compression");
+  tShrink = getParameterByName("shrink");
+
+
+  if (typeof tCompression !== 'undefined' && tCompression != null) {
+    if (isNaN(tCompression) == false && tCompression != "") {iCompression = tCompression};
+  }
+  if (typeof tShrink !== 'undefined' && tShrink != null) {
+    if (isNaN(tShrink) == false && tShrink != "") {iShrink = tShrink};
+  }
+
+
+  /*
+  // stack3
+  folder =  "stacks6/axial";
+  iWidth = Math.round(512/iCompression);
+  iHeight = Math.round(512/iCompression);
+  iPixelspacing = 0.976*iCompression*iShrink;
+  iSlices = 200;
+  iAxialST = 0.625;
+  iAxialSS = 0.625;
+  */
+
+
+  /*
+  // stack12
+  folder =  "stacks12/axial";
+  iWidth = 256;
+  iHeight = 256;
+  iPixelspacing = 2*0.976;
+  iSlices = 200;
+  iAxialST = 0.625;
+  iAxialSS = 0.625;
+  */
+
+  /*
+  // stack5
+  folder =  "stacks5/axial";
+  iWidth = 128;
+  iHeight = 128;
+  iPixelspacing = 1.88;
+  iSlices = 32;
+  iAxialST = 5;
+  iAxialSS = 5;
+
+  */
+
+  /*
+  // stack14
+  folder =  "stacks14/axial";
+  iWidth = Math.round(512/iCompression);
+  iHeight = Math.round(512/iCompression);
+  iPixelspacing = (iCompression*0.488)*2;
+  iSlices = 323;
+  iAxialST = 0.6;
+  iAxialSS = 0.6;
+  */
+
+  /*
+  // stack13
+  folder =  "stacks13/axial";
+  iWidth = Math.round(512/iCompression);
+  iHeight = Math.round(512/iCompression);
+  iPixelspacing = iCompression*0.488*iShrink;
+  iSlices = 190;
+  iAxialST = 0.6;
+  iAxialSS = 0.6;
+  */
+
+  /*
+  // stack11
+
+  folder =  "stacks11/axial";
+  iWidth = Math.round(328/iCompression);
+  iHeight = Math.round(328/iCompression);
+  iPixelspacing = iCompression*0.625*iShrink;
+  iSlices = 169;
+  iAxialST = 1;
+  iAxialSS = 1;
+  */
+
+
+  /*
+  folder =  "stacks8/axial";
+  iWidth = 512;
+  iHeight = 512;
+  iPixelspacing = 0.72;
+  iSlices = 43;
+  iAxialST = 6;
+  iAxialSS = 6;
+  */
+
+  /*
+  folder =  "stacks/axial";
+  iWidth = "";
+  iHeight = "";
+  iPixelspacing = "";
+  //iPixelspacing = 0.703*iCompression*iShrink;
+  iSlices = 200;
+  iAxialST = 1.25;
+  iAxialSS = 0.625;
+  */
+
+
+  /*
+  // /axial
+  iWidth = 512;
+  iHeight = 512;
+  iPixelspacing = 0.256;
+  iSlices = 421;
+  iAxialST = 0.46;
+  iAxialSS = 0.46;
+  */
+
+
+  if (typeof tFolder !== 'undefined' && tFolder != null) {
+    if (tFolder != "") {folder = tFolder};
+  }
+  if (typeof tPixelspacing !== 'undefined' && tPixelspacing != null) {
+    if (isNaN(tPixelspacing) == false && tPixelspacing != "") {iPixelspacing = tPixelspacing};
+  }
+  if (typeof tSlices !== 'undefined' && tSlices != null) {
+    if (isNaN(tSlices) == false && tSlices != "") {iSlices = tSlices};
+  }
+  /*
+  if (typeof tWidth !== 'undefined' && tWidth != null) {
+      if (isNaN(tWidth) == false && tWidth != "") {iWidth = tWidth};
+  }
+  if (typeof tHeight !== 'undefined' && tHeight != null) {
+      if (isNaN(tHeight) == false && tHeight != "") {iHeight = tHeight};
+  }
+  */
+  if (typeof tAxialST !== 'undefined' && tAxialST != null) {
+    if (isNaN(tAxialST) == false && tAxialST != "") {iAxialST = tAxialST};
+  }
+  if (typeof tAxialSS !== 'undefined' && tAxialSS != null) {
+    if (isNaN(tAxialSS) == false && tAxialSS != "") {iAxialSS = tAxialSS};
+  }
+
+
+  document.getElementById("inputFolder").value = folder;
+  document.getElementById("inputPixelspacing").value = iPixelspacing;
+  document.getElementById("inputSlices").value = iSlices;
+  document.getElementById("inputST").value = iAxialST;
+  document.getElementById("inputSS").value = iAxialSS;
+
+  if (iCompression == "")
+    document.getElementById("inputCompression").value = 1;
+  else
+    document.getElementById("inputCompression").value = iCompression;
+  if (iShrink == "")
+    document.getElementById("inputShrink").value = 1;
+  else
+    document.getElementById("inputShrink").value = iShrink;
+
+
+
+
+
+  canvas = document.createElement('canvas'),
+    ctx = canvas.getContext('2d');
+  canvas.style.border = "solid opx black"
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+
+  document.body.appendChild(canvas);
+
+  var stackLayers = new Array();
+  var firstStack = null;
+  var navMode = null;
+  var ex3DFlag = false;
+  var imagesData = new Array();
+
+  var fl;
+  var centerZ1;
+  var scaleFac;
+
+  var totalHeightmm;
+  var totalHeightpx;
+
+
+  var stacks = new Array();
+
+
+  function initBaseStack() {
+
+    stacks[0] = new Object();
+    stacks[0].width = iWidth; // HER
+    stacks[0].height = iHeight; // HER
+    stacks[0].pixelspacing = iPixelspacing;
+
+    stacks[0].axialST = iAxialST;
+    stacks[0].slices = iSlices-1;
+    stacks[0].axialSS = iAxialSS;
+
+
+    stacks[0].imgIteration = Math.floor(stacks[0].slices/2);
+    stacks[0].x = 125;
+    stacks[0].y = 100;
+    stacks[0].zoom = 0.2;
+
+    stacks[0].angle = 1;
+    stacks[0].name = "axial";
+    stacks[0].rColor = "#fffffb";
+    stacks[0].cRot = 0;
+    stackLayers[0] = 0;
+    stacks[0].images = new Array();
+
+    totalHeightmm = stacks[0].slices * stacks[0].axialST;
+    totalHeightpx = totalHeightmm / stacks[0].pixelspacing;
+    totalHeightpx = Math.floor(totalHeightpx/(stacks[0].axialST/stacks[0].axialSS));
+
+  }
+
+  function defineStacks () {
+
+// coronal
+    stacks[1] = new Object();
+    stacks[1].slices = stacks[0].height;
+    stacks[1].imgIteration = stacks[1].slices/2;
+    stacks[1].x = 500;
+    stacks[1].y = 500;
+    stacks[1].width = stacks[0].width;
+    stacks[1].height = totalHeightpx; // totalHeightpx;
+    stacks[1].zoom = 1;
+    stacks[1].angle = 0;
+    stacks[1].name = "coronal";
+    stacks[1].rColor = "#ff00ff";
+    stacks[1].cRot = 0;
+    stacks[1].cProjection = 0;
+    stacks[1].cProjectionWidth = 1;
+    stacks[1].bias = 0;
+    stacks[1].gain = 1;
+    stackLayers[1] = 1;
+    stacks[1].update = false;
+    stacks[1].lastImg = stacks[1].imgIteration;
+    stacks[1].no = 1;
+
+
+// sagittal
+    stacks[3] = new Object();
+    stacks[3].slices = stacks[0].height;
+    stacks[3].imgIteration = stacks[0].width/2;
+    stacks[3].x = 1000;
+    stacks[3].y = 500;
+    stacks[3].width = stacks[0].height;
+    stacks[3].height = totalHeightpx; // totalHeightpx;
+    stacks[3].zoom = 1;
+    stacks[3].angle = 0;
+    stacks[3].name = "sagittal";
+    stacks[3].rColor = "#1ec4e1";
+    stacks[3].cRot = 0;
+    stacks[3].cProjection = 0;
+    stacks[3].cProjectionWidth = 1;
+    stacks[3].bias = 0;
+    stacks[3].gain = 1;
+    stackLayers[3] = 3;
+    stacks[3].update = false;
+    stacks[3].lastImg = stacks[3].imgIteration;
+    stacks[3].no = 3;
+
+// new Axial
+    stacks[2] = new Object();
+    stacks[2].imgIteration = 50;
+    stacks[2].slices = totalHeightpx;
+    stacks[2].x = 700;
+    stacks[2].y = 200;
+    stacks[2].width = stacks[0].width;
+    stacks[2].height = stacks[0].height; // totalHeightpx;
+    stacks[2].zoom = 1;
+    stacks[2].angle = 0;
+    stacks[2].name = "nAxial";
+    stacks[2].rColor = "#dadf0d";
+    stacks[2].cRot = 0;
+    stacks[2].cProjection = 0;
+    stacks[2].cProjectionWidth = 1;
+    stacks[2].bias = 0;
+    stacks[2].gain = 1;
+    stacks[2].update = false;
+    stackLayers[2] = 2;
+    stacks[2].lastImg = stacks[2].imgIteration;
+    stacks[3].no = 3;
+
+
+    stacks[1].images = new Array();
+    stacks[2].images = new Array();
+    stacks[3].images = new Array();
+
+    stacks[1].oD = ctx.createImageData(stacks[1].width, stacks[1].height);
+    stacks[2].oD = ctx.createImageData(stacks[2].width, stacks[2].height);
+    stacks[3].oD = ctx.createImageData(stacks[3].width, stacks[3].height);
+
+
+    stacks[1].workerReady = false;
+    stacks[2].workerReady = false;
+    stacks[3].workerReady = false;
+
+
+  }
+
+  function initialize() {
+
+
+    console.log("///////////////");
+    console.log("folder "+folder);
+    console.log("iPixelspacing "+iPixelspacing);
+    console.log("iSlices "+iSlices);
+    console.log("iAxialST "+iAxialST);
+    console.log("iAxialSS "+iAxialSS);
+    console.log("///////////////");
+
+
+    if (folder == "")
+      missingInput = true;
+    if (iPixelspacing == "")
+      missingInput = true;
+    if (iSlices == "")
+      missingInput = true;
+    if (iAxialST == "")
+      missingInput = true;
+    if (iAxialSS == "")
+      missingInput = true;
+
+    console.log("missingInput: "+missingInput);
+    console.log("///////////////");
+
+    startApp();
+
+    return;
+
+    if (missingInput) {
+      $( "#dialog" ).dialog( "open" );
+    }
+    else
+      startApp();
+    //startApp()
+    ;
+
+  }
+
+  function setInput() {
+
+
+
+
+
+    folder =  document.getElementById("inputFolder").value;
+    iPixelspacing = parseFloat(document.getElementById("inputPixelspacing").value);
+    iSlices = parseInt(document.getElementById("inputSlices").value); // 200;
+    iAxialST = parseFloat(document.getElementById("inputST").value); //1.25;
+    iAxialSS = parseFloat(document.getElementById("inputSS").value); // 0.625;
+    iCompression = parseFloat(document.getElementById("inputCompression").value); // 0.625;
+    iShrink = parseFloat(document.getElementById("inputShrink").value); // 0.625;
+
+
+    missingInput = false;
+    errorMessage = "";
+
+    if (folder == "") {
+      missingInput = true;
+      errorMessage = "Please specify name of stack folder<br>";
+    }
+    if (iPixelspacing == "" || $.isNumeric( iPixelspacing ) == false) {
+      missingInput = true;
+      errorMessage += "Please specify pixelspacing of stack<br>";
+    }
+    if (iSlices == ""  || $.isNumeric( iSlices ) == false) {
+      missingInput = true;
+      errorMessage += "Please specify the number of slices in stack<br>";
+    }
+    if (iAxialST == ""  || $.isNumeric( iAxialST ) == false) {
+      missingInput = true;
+      errorMessage += "Please specify slice thickness of stack<br>";
+    }
+    if (iAxialSS == ""  || $.isNumeric( iAxialSS ) == false) {
+      missingInput = true;
+      errorMessage += "Please specify slice spacing of stack<br>";
+    }
+    if (iShrink == ""  || $.isNumeric( iShrink ) == false) {
+      missingInput = true;
+      errorMessage += "Please specify shrink<br>";
+    }
+    if (iCompression == ""  || $.isNumeric( iCompression ) == false) {
+      missingInput = true;
+      errorMessage += "Please specify compression<br>";
+    }
+
+    if (missingInput) {
+
+
+      document.getElementById("inputMessage").innerHTML = "<small>"+errorMessage+"</small>";
+      return;
+    }
+
+
+    //if ($.isNumeric( iCompression ) && $.isNumeric( iCompression ))
+
+    $( "#dialog" ).dialog( "close" );
+    startApp();
+  }
+
+
+  function startApp() {
+
+    dumImg = new Image();
+
+    fileString = 1;
+
+    dumImg.src =  "stacks/axial1.jpg";
+
+    dumImg.addEventListener('load', function() {
+      console.log('My width is: ', this.naturalWidth);
+      console.log('My height is: ', this.naturalHeight);
+
+
+      folder = "stacks";
+      iWidth = Math.round(this.naturalWidth/iCompression);
+      iHeight = Math.round(this.naturalHeight/iCompression);
+      iPixelspacing = 0.703;
+      iSlices = 200;
+      iAxialST = 1.25;
+      iAxialSS = 0.625;
+
+
+
+      //folder =  "stacks/axial";
+      folder = folder + "/axial";
+      iWidth = Math.round(this.naturalWidth/iCompression);
+      iHeight = Math.round(this.naturalHeight/iCompression);
+      iPixelspacing = iPixelspacing; // 0.703;
+      iPixelspacing = parseFloat(iPixelspacing*iCompression*iShrink);
+      iSlices = iSlices; // 200;
+      iAxialST = iAxialST; //1.25;
+      iAxialSS = iAxialSS; // 0.625;
+
+      loadImages();
+    });
+
+
+    //document.getElementById("inputCompression").value
+
+  }
+
+
+  var loaded = 0;
+  var i = 0;
+  document.getElementById("toolbar").style.visibility="hidden";
+
+  var timer;
+
+  function loadImages() {
+
+
+    fl = 150;
+    centerZ = 250/1; // original 250
+    scaleFac = (1/2)*iCompression;
+
+    initBaseStack();
+
+    setupCube();
+
+
+//$( "#dialog" ).dialog( "open" );
+
+    timer = window.setInterval(function(){
+
+      if (i==stacks[0].slices)
+        window.clearInterval( timer );
+
+      leng = (i+1).toString().length;leng = 6-leng;fileString = Array(leng).join("0").toString()+(i+1);
+      stacks[0].images[i] = new Image();
+
+
+      fileString = i+1;
+
+
+      stacks[0].images[i].src = folder + fileString + ".jpg";
+
+
+
+      stacks[0].images[i].onload = function() {
+        loaded++;
+
+        document.getElementById("loadCounter").innerHTML = Math.round((loaded/stacks[0].slices)*100) + " %";
+
+
+        if (loaded==stacks[0].slices) {
+
+          window.clearInterval( timer );
+
+          defineStacks();
+
+          initAxialStack(stacks[0].width,stacks[0].height,stacks[0].slices);
+
+
+          document.getElementById("toolbar").style.display="block";
+          document.getElementById("loadCounter").style.display="none";
+          setTimeout(createWorkers(), 100);
+        }
+      }
+      i++;
+    }, 1);
+
+
+  }
+
+  function initAxialStack(width,height,slices) {
+    ctx.fillStyle='rgb('+0+','+0+','+0+')';
+
+    ctx.fillRect(0, 0, width, width);
+
+    var nWidth = width / iShrink;
+    var nHeight = height / iShrink;
+
+
+
+    for (i=0;i<slices;i++) {
+      //ctx.drawImage(stacks[0].images[i], 0, 0,width,height);
+
+      ctx.drawImage(stacks[0].images[i], (width-nWidth)*0.5, (height-nHeight)*0.5, nWidth, nHeight);
+
+      var imgData=ctx.getImageData(0,0,width,height);
+      imagesData[i] = imgData.data;
+    }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+
+  }
+
+  function createMPR() {
+
+    console.log("createMPR");
+
+    document.getElementById("toolbar").style.visibility="visible";
+    document.getElementById("toolbarDiv").style.visibility="visible";
+
+
+    firstStack = 2;
+    setProjectionWidthStack(firstStack,1);
+    setProjectionWidthStack(firstStack,-1);
+    //ex3D(true);
+
+
+
+    placeStacks();
+    //updateStacks();
+
+  }
+
+
+
+  function getRotation(width,angle) {
+
+    rad1 =  (width/2);
+    x1 = Math.round(rad1 * Math.cos(angle) - 0 * Math.sin(angle));
+    y1 = Math.round(0 * Math.cos(angle) + rad1 * Math.sin(angle));
+
+    rad2 =  (width/2)-1;
+    x2 = Math.round(rad2 * Math.cos(angle) - 0 * Math.sin(angle));
+    y2 = Math.round(0 * Math.cos(angle) + rad2 * Math.sin(angle));
+
+    return [x1,y1,x2,y2];
+  }
+
+  function getRotation2(width,angle) {
+
+    rad1 =  (width/2);
+    x1 = (rad1 * Math.cos(angle) - 0 * Math.sin(angle));
+    y1 = (0 * Math.cos(angle) + rad1 * Math.sin(angle));
+
+    var newAngle = angle + Math.PI;
+    rad2 =  (width/2)-1;
+    x2 = (rad2 * Math.cos(newAngle) - 0 * Math.sin(newAngle));
+    y2 = (0 * Math.cos(newAngle) + rad2 * Math.sin(newAngle));
+
+    return [x1,y1,x2,y2];
+  }
+
+
+  var updateCanvas = document.createElement('canvas');
+  var updateContext = updateCanvas.getContext('2d');
+
+  function updateStacks(centerRot) {
+
+
+
+    //var n =  new Date().getMilliseconds();
+
+
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle="#FF0000";
+
+    for (s=stackLayers.length-1;s>=0;s--) {
+      var i = stackLayers[s];
+
+      if (stacks[i].name == "axial") {
+        continue;
+      }
+
+
+      updateCanvas.width = stacks[i].width;
+      updateCanvas.height = stacks[i].height;
+
+
+      gainBias = stacks[i].gain*0+stacks[i].bias;
+      if (gainBias < 0)
+        gainBias = 0;
+      if (gainBias > 255)
+        gainBias = 255;
+
+
+      ctx.fillStyle='rgb('+gainBias+','+gainBias+','+gainBias+')';
+
+      //console.log(stacks[i].bias+"bias "+gainBias);
+
+
+      ctx.fillRect(stacks[i].x, stacks[i].y, stacks[i].width*stacks[i].zoom, stacks[i].height*stacks[i].zoom);
+
+      ctx.save();
+
+      //center = [stacks[i].x,stacks[i].y,((stacks[i].width*stacks[i].zoom)/2-1),((stacks[i].height*stacks[i].zoom)/2-1)];
+
+      offset = [((stacks[i].width*stacks[i].zoom)/2-1),((stacks[i].height*stacks[i].zoom)/2-1)];
+
+      center = [stacks[i].x+offset[0],stacks[i].y+offset[1]];
+
+      updateOffset = [((stacks[i].width)/2-1),((stacks[i].height)/2-1)];
+
+      updateCenter = [updateOffset[0],updateOffset[1]];
+
+      ctx.translate(center[0],center[1]);
+
+      updateContext.translate(updateCenter[0],updateCenter[1]);
+
+      if (stacks[i].name == "coronal") {
+        updateContext.rotate(stacks[i].cRot);
+      }
+      if (stacks[i].name == "sagittal") {
+        updateContext.rotate(stacks[i].cRot);
+      }
+      if (stacks[i].name == "nAxial") {
+        updateContext.rotate(stacks[i].cRot);
+      }
+
+      //ctx.drawImage(stacks[i].images[stacks[i].imgIteration], -offset[0],-offset[1],stacks[i].width*stacks[i].zoom,stacks[i].height*stacks[i].zoom);
+      if (stacks[i].imgIteration < 0 || stacks[i].imgIteration > stacks[i].slices-1) {
+      }
+      else {
+
+        if (stacks[i].images[stacks[i].imgIteration] == undefined) {
+          if (stacks[i].images[stacks[i].lastImg] != undefined)
+            updateContext.drawImage(stacks[i].images[stacks[i].lastImg], -updateOffset[0],-updateOffset[1],stacks[i].width,stacks[i].height);
+        }
+        else {
+
+          updateContext.drawImage(stacks[i].images[stacks[i].imgIteration], -updateOffset[0],-updateOffset[1],stacks[i].width,stacks[i].height);
+
+        }
+
+        ctx.drawImage(updateCanvas, -offset[0],-offset[1],stacks[i].width*stacks[i].zoom,stacks[i].height*stacks[i].zoom);
+        ctx.globalAlpha=1;
+      }
+      ctx.restore();
+
+      if (stacks[i].name == "axial") {continue;}
+
+      ctx.strokeStyle= stacks[i].rColor;
+
+      // stackBorder
+      ctx.beginPath();
+      ctx.moveTo(stacks[i].x, stacks[i].y);
+      ctx.lineTo(stacks[i].x+stacks[i].width*stacks[i].zoom,stacks[i].y);
+      ctx.lineTo(stacks[i].x+stacks[i].width*stacks[i].zoom,stacks[i].y+stacks[i].height*stacks[i].zoom);
+      ctx.lineTo(stacks[i].x,stacks[i].y+stacks[i].height*stacks[i].zoom);
+      ctx.closePath();
+      ctx.stroke();
+
+      // stack annotation
+      ctx.fillStyle="#FFFFFF";
+      ctx.font="12px Verdana";
+      ctx.fillText("IM: "+parseInt(stacks[i].imgIteration+1)+"/"+stacks[i].slices, stacks[i].x+5, stacks[i].y+15);
+
+      ctx.font="12px Verdana";
+      ctx.fillText(projections[stacks[i].cProjection]+": "+(stacks[i].cProjectionWidth*iPixelspacing).toFixed(2)+" mm", stacks[i].x+5, stacks[i].y+28);
+
+
+      ctx.fillStyle="#c0c0c0";
+
+      if (stacks[i].name != "axial") {
+
+        stacks[i].iLines = new Array();
+
+      }
+
+
+
+      for (p=0;p<stacks.length;p++) {
+        if (p == i || stacks[i].name == "axial" || stacks[p].name == "axial")
+          continue;
+
+
+        if (stacks[i].name == "nAxial" || stacks[i].name == "coronal" || stacks[i].name == "sagittal") {
+
+          var rotW;
+          var tAngle = 0;
+
+          if (stacks[p].name == "coronal" && stacks[i].name == "nAxial" ) {
+            tAngle = axAngle;
+            rotW = stacks[i].height*stacks[i].zoom;
+            ctx.strokeStyle=stacks[p].rColor;
+          }
+          if (stacks[p].name == "sagittal" && stacks[i].name == "nAxial" ) {
+            tAngle = axAngle+Math.PI/2;
+            rotW = stacks[i].width*stacks[i].zoom;
+            ctx.strokeStyle=stacks[p].rColor;
+
+          }
+          if (stacks[p].name == "nAxial" && stacks[i].name == "coronal" ) {
+            tAngle = corAngle;
+            rotW = stacks[i].height*stacks[i].zoom;
+            ctx.strokeStyle=stacks[p].rColor;
+          }
+          if (stacks[p].name == "sagittal" && stacks[i].name == "coronal" ) {
+            tAngle = corAngle+Math.PI/2;
+            rotW = stacks[i].width*stacks[i].zoom;
+            ctx.strokeStyle=stacks[p].rColor;
+
+
+          }
+          if (stacks[p].name == "nAxial" && stacks[i].name == "sagittal" ) {
+            tAngle = sagAngle;
+            rotW = stacks[i].height*stacks[i].zoom;
+            ctx.strokeStyle=stacks[p].rColor;
+
+          }
+          if (stacks[p].name == "coronal" && stacks[i].name == "sagittal" ) {
+
+            tAngle = sagAngle+Math.PI/2;
+            rotW = stacks[i].width*stacks[i].zoom;
+            ctx.strokeStyle=stacks[p].rColor;
+
+          }
+
+
+          coords = getRotation(rotW,tAngle+Math.PI/2);
+          center = [stacks[i].x+((stacks[i].width*stacks[i].zoom)/2-1),stacks[i].y+((stacks[i].height*stacks[i].zoom)/2-1)];
+
+          // dot at center of stack
+          /*
+          ctx.beginPath();
+          ctx.arc(center[0], center[1], 2, 0, 2 * Math.PI);
+          ctx.fill();
+          */
+
+          coords[4] = coords[2]-(-coords[0]); // vectors
+          coords[5] = coords[3]-(-coords[1]); // vectors
+
+          var rotW;;
+
+          if (stacks[p].name == "sagittal" && stacks[i].name == "nAxial") {
+            center[2] = center[0]+coords[0]-(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]+coords[1]-(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]+coords[0]-(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]+coords[1]-(coords[5]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]+coords[0]-(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]+coords[1]-(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            rotW = stacks[p].width;
+          }
+          else if (stacks[p].name == "coronal" && stacks[i].name == "nAxial") {
+            center[2] = center[0]-coords[2]+(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]-coords[3]+(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]-coords[1]+(coords[5]*(((stacks[p].imgIteration+stacks[p].cProjectionWidth/2))/(stacks[p].slices-1)));
+
+            rotW = stacks[p].width;
+          }
+          else if (stacks[p].name == "nAxial" && stacks[i].name == "coronal"){
+            center[2] = center[0]-coords[2]+(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]-coords[3]+(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            rotW = stacks[p].width;
+          }
+          else if (stacks[p].name == "sagittal" && stacks[i].name == "coronal"){
+            center[2] = center[0]+coords[2]-(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]+coords[3]-(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]+coords[0]-(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]+coords[1]-(coords[5]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]+coords[0]-(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]+coords[1]-(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            rotW = stacks[p].height;
+          }
+          else if (stacks[p].name == "nAxial" && stacks[i].name == "sagittal"){
+            center[2] = center[0]-coords[2]+(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]-coords[3]+(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            rotW = stacks[p].height;  // stacks[p].width;
+          }
+          else if (stacks[p].name == "coronal" && stacks[i].name == "sagittal"){
+            center[2] = center[0]+coords[2]-(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]+coords[3]-(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]+coords[0]-(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]+coords[1]-(coords[5]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]+coords[0]-(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]+coords[1]-(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            rotW = stacks[p].height; // stacks[p].height;
+          }
+          else {
+            center[2] = center[0]-coords[2]+(coords[4]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[3] = center[1]-coords[3]+(coords[5]*(stacks[p].imgIteration/(stacks[p].slices-1)));
+            center[4] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[5] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration+stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[6] = center[0]-coords[0]+(coords[4]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            center[7] = center[1]-coords[1]+(coords[5]*((stacks[p].imgIteration-stacks[p].cProjectionWidth/2)/(stacks[p].slices-1)));
+            rotW = stacks[p].width;
+          }
+
+          // dot at center of cross reference line
+          /*
+          ctx.beginPath();
+          ctx.arc(center[2], center[3], 2, 0, 2 * Math.PI);
+          ctx.fill();
+          */
+
+          coords = getRotation(rotW*stacks[i].zoom,tAngle);
+
+          // draw cross reference line
+          if (stacks[p].cProjectionWidth < 2) {
+            ctx.beginPath();
+            ctx.moveTo(center[2]-coords[2],center[3]-coords[3]);
+            ctx.lineTo(center[2]+coords[0],center[3]+coords[1]);
+            ctx.stroke();
+          }
+
+          //  draw cross reference line when width > 1
+          if (stacks[p].cProjectionWidth > 1) {
+            ctx.save();
+            ctx.setLineDash([5, 2]);
+            ctx.lineWidth=0.5;
+            ctx.beginPath();
+            ctx.moveTo(center[4]-coords[2],center[5]-coords[3]);
+            ctx.lineTo(center[4]+coords[0],center[5]+coords[1]);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(center[6]-coords[2],center[7]-coords[3]);
+            ctx.lineTo(center[6]+coords[0],center[7]+coords[1]);
+            ctx.stroke();
+            ctx.restore();
+          }
+          // }
+
+
+
+          if (stacks[i].name != "axial") {
+            stacks[i].iLines.push(center[2]-coords[2],center[3]-coords[3],center[2]+coords[0],center[3]+coords[1]);
+            if (stacks[i].iLines.length == 8) {
+              li = line_intersect(stacks[i].iLines[0],stacks[i].iLines[1],stacks[i].iLines[2],stacks[i].iLines[3],stacks[i].iLines[4],stacks[i].iLines[5],stacks[i].iLines[6],stacks[i].iLines[7]);
+
+              if (centerRot == "centerRot") {
+                ctx.beginPath();
+                ctx.arc(li.x,li.y, 1, 0, 2 * Math.PI);
+                ctx.fill();
+
+              }
+              else {
+                stacks[i].rotCenter = [li.x, li.y];
+                ctx.beginPath();
+                ctx.arc(li.x,li.y, 1, 0, 2 * Math.PI);
+                ctx.fill();
+              }
+            }
+          }
+
+
+
+
+          // dot at each end of cross reference line
+          /*
+          ctx.beginPath();
+          ctx.arc(center[2]-coords[2],center[3]-coords[3], 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(center[2]+coords[0],center[3]+coords[1], 2, 0, 2 * Math.PI);
+          ctx.fill();
+         */
+
+        }
+
+
+
+      }
+
+      // draw stack dot
+      ctx.fillStyle = "white";
+      if (firstStack == i)
+        ctx.fillRect(stacks[i].x,stacks[i].y,4,4);
+    }
+
+    ctx.strokeStyle="#c0c0c0";
+    ctx.fillStyle="#FF00EE";
+
+    // draw initialStack image
+
+    draw();
+
+    ctx.globalAlpha=0.2;
+
+    ctx.drawImage(stacks[0].images[stacks[0].imgIteration], stacks[0].x,stacks[0].y,stacks[0].width*stacks[0].zoom,stacks[0].height*stacks[0].zoom);
+    diffCube = (stacks[0].width*stacks[0].zoom2-stacks[0].width*stacks[0].zoom)/2;
+    ctx.drawImage(stacks[0].images[stacks[0].imgIteration+50], stacks[0].x-diffCube,stacks[0].y-diffCube,stacks[0].width*stacks[0].zoom2,stacks[0].height*stacks[0].zoom2);
+
+
+    ctx.globalAlpha=1;
+
+    dist = 0;
+
+    if (navMode == "caliper")
+    {
+      ctx.fillStyle= stacks[firstStack].rColor;
+      ctx.beginPath();
+      ctx.arc(lastPos[0], lastPos[1], 2, 0, 2 * Math.PI);
+      ctx.fill();
+      if (caliperArray.length > 0) {
+        ctx.beginPath();
+        ctx.arc(caliperArray[0][0], caliperArray[0][1], 2, 0, 2 * Math.PI);
+        ctx.fill();
+
+        dist = Math.sqrt((lastPos[0]-caliperArray[0][0])*(lastPos[0]-caliperArray[0][0])+(lastPos[1]-caliperArray[0][1])*(lastPos[1]-caliperArray[0][1]));
+
+
+        if (caliperArray.length <2) {
+          ctx.beginPath();
+          ctx.moveTo(caliperArray[0][0], caliperArray[0][1]);
+          ctx.lineTo(lastPos[0], lastPos[1]);
+          ctx.stroke();
+        }
+
+      }
+      if (caliperArray.length > 1) {
+        ctx.beginPath();
+        ctx.arc(caliperArray[1][0], caliperArray[1][1], 2, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(caliperArray[0][0], caliperArray[0][1]);
+        ctx.lineTo(caliperArray[1][0], caliperArray[1][1]);
+        ctx.stroke();
+
+        dist = Math.sqrt((caliperArray[1][0]-caliperArray[0][0])*(caliperArray[1][0]-caliperArray[0][0])+(caliperArray[1][1]-caliperArray[0][1])*(caliperArray[1][1]-caliperArray[0][1]));
+
+
+      }
+
+      if (dist > 0)
+      {
+        dist = (dist/stacks[i].zoom)*iPixelspacing;
+        dist = Math.round( dist) / 10;
+        dist = dist.toFixed(1);
+        ctx.fillStyle=stacks[firstStack].rColor;
+        ctx.font="20px Verdana";
+        ctx.fillText(""+dist+ " cm", caliperArray[0][0]+10, caliperArray[0][1]+3);
+      }
+    }
+
+    // var p = parseInt(new Date().getMilliseconds())-parseInt(n);
+    //console.log("Up: "+p);
+  }
+
+
+  function placeStacks() {
+
+
+    stacks[1].zoom = (window.innerWidth/3)/stacks[1].width;
+    stacks[1].x = 0;
+    stacks[1].y = stacks[2].y = stacks[3].y = 150;
+
+    stacks[2].zoom = (window.innerWidth/3)/stacks[2].width;
+    stacks[2].x = (window.innerWidth/3);
+
+    stacks[3].zoom = (window.innerWidth/3)/stacks[3].width;
+    stacks[3].x = (window.innerWidth/3)*2;
+
+    stacks[0].x = 20;
+    stacks[0].y = 20;
+
+
+    updateStacks();
+
+
+  }
+
+  function drawEdge(x1,y1,x2,y2,e,s1,s2,n0,n1) {
+
+    ctx.fillStyle="#c0c0c0";
+
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+
+
+    if (nodes[n0][6] == false) {
+      ctx.beginPath();
+      ctx.arc(x1, y1, nodeSize*s1, 0, 2 * Math.PI);
+      ctx.fill();
+      nodes[n0][6] = true;
+    }
+
+    if (nodes[n1][6] == false) {
+      ctx.beginPath();
+      ctx.arc(x2, y2, nodeSize*s2, 0, 2 * Math.PI);
+      ctx.fill();
+      nodes[n1][6] = true;
+    }
+
+
+    // sagittal
+    if (edges[e].toString() == "0,1") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[3].imgIteration/stacks[3].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[3].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "4,5") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[3].imgIteration/stacks[3].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[3].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "2,3") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[3].imgIteration/stacks[3].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[3].rColor;
+      ctx.beginPath();
+      ctx.arc(x2-ratio*dX, y2-ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "6,7") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[3].imgIteration/stacks[3].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[3].rColor;
+      ctx.beginPath();
+      ctx.arc(x2-ratio*dX, y2-ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    // end sagittal
+
+    // nAxial
+
+    if (edges[e].toString() == "0,4") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[2].imgIteration/stacks[2].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[2].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    if (edges[e].toString() == "1,5") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[2].imgIteration/stacks[2].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[2].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "2,6") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[2].imgIteration/stacks[2].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[2].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "3,7") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[2].imgIteration/stacks[2].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[2].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    // end nAxial
+
+    // coronal
+    if (edges[e].toString() == "7,4") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[1].imgIteration/stacks[1].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[1].rColor;
+      ctx.beginPath();
+      ctx.arc(x2-ratio*dX, y2-ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "3,0") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[1].imgIteration/stacks[1].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[1].rColor;
+      ctx.beginPath();
+      ctx.arc(x2-ratio*dX, y2-ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    if (edges[e].toString() == "1,2") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[1].imgIteration/stacks[1].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[1].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    if (edges[e].toString() == "5,6") {
+      dX = x2-x1;
+      dY = y2-y1;
+      ratio = stacks[1].imgIteration/stacks[1].slices;
+
+      (s1>s2 ? middleScale = s1-(Math.abs(s2-s1)*ratio) : middleScale = s1+(Math.abs(s2-s1)*ratio));
+
+      ctx.fillStyle=stacks[1].rColor;
+      ctx.beginPath();
+      ctx.arc(x1+ratio*dX, y1+ratio*dY, nodeSize*middleScale, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    // end coronal
+
+
+
+
+
+  }
+
+  function ellipse(x1,y1,nS,n) {
+    if (n <= 3)
+      ctx.fillStyle="#00FF00";
+    else
+      ctx.fillStyle="#FF0000";
+    ctx.beginPath();
+    ctx.arc(x1, y1, nS, 0, 2 * Math.PI);
+    ctx.fill();
+
+  }
+
+  var draw= function() {
+    ctx.strokeStyle="#c0c0c0";
+
+    for (n=0;n<nodes.length;n++){
+      nodes[n][6] = false;
+    }
+
+    var offset = [stacks[0].x+matrixWidth/2,stacks[0].y+matrixWidth/2];
+    var offset2 = [stacks[0].x+matrixWidth2/2,stacks[0].y+matrixWidth2/2];
+
+    for (var e=0; e<edges.length; e++) {
+      var n0 = edges[e][0];
+      var n1 = edges[e][1];
+
+      var node0 = [nodes[n0][0]*scaleFac,nodes[n0][1]*scaleFac,nodes[n0][2]*scaleFac];
+      var node1 = [nodes[n1][0]*scaleFac,nodes[n1][1]*scaleFac,nodes[n1][2]*scaleFac];
+
+      scale0 = fl / (fl + node0[2] + centerZ);
+      scale1 = fl / (fl + node1[2] + centerZ);
+
+      drawEdge(node0[0]*scale0+offset[0], node0[1]*scale0+offset[1], node1[0]*scale1+offset[0], node1[1]*scale1+offset[1],e,scale0,scale1,n0,n1);
+    }
+
+    for (var n=0; n<nodes.length; n++) {
+      //var node = [nodes[n][0]*scaleFac,nodes[n][1]*scaleFac,nodes[n][2]*scaleFac];
+      //scale = fl / (fl + node[2] + centerZ);
+      //ellipse(node[0]*scale+offset[0], node[1]*scale+offset[1], nodeSize*scale,n);
+    }
+
+
+
+
+  };
+
+
+
+  var nodeSize = 8;
+
+  var axAngle = 0; // 2
+  var corAngle = 0; // 1
+  var sagAngle = 0; // 0
+
+  var widthNode;
+  var slicesZ;
+  var slicesHalf;
+  var widthNode0;
+  var widthNode1;
+  var slicesHalf0;
+  var slicesHalf1;
+
+
+  var node0;
+  var node1;
+  var node2;
+  var node3;
+  var node4;
+  var node5;
+  var node6;
+  var node7;
+
+  var nodes;
+
+  var neoNode0;
+  var scale;
+  var matrixWidth;
+
+  var scale2;
+  var matrixWidth2;
+
+
+  var nodesSort;
+
+  var edge0;
+  var edge1;
+  var edge2;
+  var edge3;
+  var edge4;
+  var edge5;
+  var edge6;
+  var edge7;
+  var edge8;
+  var edge9;
+  var edge10;
+  var edge11;
+  var edges;
+
+  var vector0_3;
+  var vector1_2;
+  var vector0_4;
+  var vector0_1;
+
+  var axialAxis;
+  var sagittalAxis;
+  var coronalAxis;
+
+
+  function setupCube() {
+
+
+    widthNode = stacks[0].width/2;
+    slicesZ = totalHeightpx;
+    slicesHalf = slicesZ/2;
+    widthNode0 = -widthNode+2;
+    widthNode1 = widthNode;
+    slicesHalf0 = -slicesHalf+2;
+    slicesHalf1 = slicesHalf;
+
+
+    node0 = [widthNode0, widthNode0,slicesHalf0,widthNode0, widthNode0,slicesHalf0];
+    node1 = [widthNode1, widthNode0,slicesHalf0,widthNode1, widthNode0,slicesHalf0];
+    node2 = [widthNode1, widthNode1,slicesHalf0,widthNode1, widthNode1,slicesHalf0];
+    node3 = [widthNode0, widthNode1,slicesHalf0,widthNode0, widthNode1,slicesHalf0];
+
+    node4 = [widthNode0, widthNode0, slicesHalf1,widthNode0, widthNode0, slicesHalf1];
+    node5 = [widthNode1, widthNode0, slicesHalf1,widthNode1, widthNode0, slicesHalf1];
+    node6 = [widthNode1, widthNode1, slicesHalf1,widthNode1, widthNode1, slicesHalf1];
+    node7 = [widthNode0, widthNode1, slicesHalf1,widthNode0, widthNode1, slicesHalf1];
+
+
+
+    nodes = [node0, node1, node2, node3, node4, node5, node6, node7];
+    for (n=0;n<nodes.length;n++){
+      nodes[n][6] = false;
+    }
+
+
+    neoNode0 = [nodes[0][0]*scaleFac,nodes[0][1]*scaleFac,nodes[4][2]*scaleFac];
+    scale = fl / (fl + neoNode0[2] + centerZ);
+    matrixWidth = Math.round(Math.abs(neoNode0[0]*scale)*2);
+    stacks[0].zoom = matrixWidth/stacks[0].width;
+
+
+    neoNode0 = [nodes[0][0]*scaleFac,nodes[0][1]*scaleFac,nodes[0][2]*scaleFac];
+    scale2 = fl / (fl + neoNode0[2] + centerZ);
+    matrixWidth2 = Math.round(Math.abs(neoNode0[0]*scale2)*2);
+    stacks[0].zoom2 = matrixWidth2/stacks[0].width;
+
+
+    nodesSort = [0,1,2,3,4,5,6,7];
+
+    edge0  = [0,1];
+    edge1  = [1,2];
+    edge2  = [2,3];
+    edge3  = [3,0];
+    edge4  = [0,4];
+    edge5  = [1,5];
+    edge6  = [2,6];
+    edge7  = [3,7];
+    edge8  = [4,5];
+    edge9  = [5,6];
+    edge10 = [6,7];
+    edge11 = [7,4];
+    edges = [edge0, edge1, edge2, edge3, edge4, edge5, edge6, edge7, edge8, edge9, edge10, edge11];
+
+    setVectors();
+
+  }
+
+
+  function resetMatrix() {
+
+
+    for (n=0;n<nodes.length;n++){
+      nodes[n][0] = nodes[n][3];
+      nodes[n][1] = nodes[n][4];
+      nodes[n][2] = nodes[n][5];
+      axAngle = 0;
+      corAngle = 0;
+      sagAngle = 0;
+
+    }
+
+
+    for(i=1;i<4;i++) {
+      stacks[i].gain = 1;
+      stacks[i].bias = 0;
+
+    }
+    ex3D(true);
+
+  }
+
+  function sortEdgesZ() {
+
+    for (k=0;k<edges.length;k++){
+
+
+
+
+      for (l=k;l<edges.length;l++){
+
+        var n0 = edges[k][0];
+        var n1 = edges[k][1];
+        var n0z = nodes[n0][2];
+        var n1z = nodes[n1][2];
+        var diff = n1z-n0z;
+        var middleZ_k = n0z + diff/2;
+
+
+        var n0 = edges[l][0];
+        var n1 = edges[l][1];
+        var n0z = nodes[n0][2];
+        var n1z = nodes[n1][2];
+        var diff = n1z-n0z;
+        var middleZ_l = n0z + diff/2;
+
+
+
+        if (middleZ_l > middleZ_k) {
+          //console.log("SWAP "+k + "!" + l + ":::" + middleZ_k + ";;;" + middleZ_l);
+          temp = edges[k];
+          edges[k] = edges[l];
+          edges[l] = temp;
+        }
+
+        //console.log(k + "!" + l + ":::" + middleZ_k + ";;;" + middleZ_l);
+
+      }
+      //edges[e][0]
+
+
+
+
+
+    }
+    /*
+    for (k=0;k<edges.length;k++){
+        var n0 = edges[k][0];
+                var n1 = edges[k][1];
+                var n0z = nodes[n0][2];
+                var n1z = nodes[n1][2];
+                var diff = n1z-n0z;
+                var middleZ_k = n0z + diff/2;
+    // console.log("Edge "+k+" : "+edges[k].toString()+" Mz:"+middleZ_k);
+    }
+    */
+
+
+  }
+
+  function sortNodesZ() {
+
+    for (k=0;k<nodesSort.length;k++){
+      for (l=k;l<nodesSort.length;l++){
+
+        if (nodes[nodesSort[l]][2] > nodes[nodesSort[k]][2]) {
+          temp = nodesSort[k];
+          nodesSort[k] = nodesSort[l];
+          nodesSort[l] = temp;
+
+        }
+
+
+      }
+    }
+
+
+  }
+
+
+
+  function setVectors() {
+
+
+    vector0_3 = [(node3[0]-node0[0]),(node3[1]-node0[1]),(node3[2]-node0[2])]; // y-axis vector (for coronal),
+
+    vector0_3[3] = vector0_3[0]/(stacks[0].width-1);
+    vector0_3[4] = vector0_3[1]/(stacks[0].width-1);
+    vector0_3[5] = vector0_3[2]/(stacks[0].width-1);
+
+    vector1_2 = [(node2[0]-node1[0]),(node2[1]-node1[1]),(node2[2]-node1[2])];
+
+    vector1_2[3] = vector1_2[0]/(stacks[0].width-1);
+    vector1_2[4] = vector1_2[1]/(stacks[0].width-1);
+    vector1_2[5] = vector1_2[2]/(stacks[0].width-1);
+
+    vector0_4 = [(node4[0]-node0[0]),(node4[1]-node0[1]),(node4[2]-node0[2])]; // z-axis vector (for axial)
+
+    vector0_4[3] = vector0_4[0]/(slicesZ-1);
+    vector0_4[4] = vector0_4[1]/(slicesZ-1);
+    vector0_4[5] = vector0_4[2]/(slicesZ-1);
+
+    vector0_1 = [(node1[0]-node0[0]),(node1[1]-node0[1]),(node1[2]-node0[2])]; // x-axis vector (for sagittal)
+
+    vector0_1[3] = vector0_1[0]/(stacks[0].width-1);
+    vector0_1[4] = vector0_1[1]/(stacks[0].width-1);
+    vector0_1[5] = vector0_1[2]/(stacks[0].width-1);
+
+    axialAxis = vector0_4;
+    sagittalAxis = vector0_1;
+    coronalAxis = vector0_3;
+
+    sortEdgesZ();
+  }
+
+
+  function IP() {
+
+    ex3D(true, false, false, false, null);
+
+  }
+
+  var startTime, endTime;
+
+  //function WWSwivel(firstStack) {
+  function ex3D (ip, notAxial, notCoronal, notSagittal, centerRot) {
+
+
+    ex3DFlag = true;
+    setVectors();
+
+
+
+    if (!notCoronal) {
+      stacks[1].update = true;
+      stacks[1].worker.postMessage(["swivel", stacks[1].imgIteration, stacks[1].cProjectionWidth, node0, node1, vector0_3, vector0_4, ip, centerRot, projections[stacks[1].cProjection], stacks[1].gain, stacks[1].bias]);
+    }
+    if (!notAxial) {
+      stacks[2].update = true;
+      startTime =  new Date().getTime();
+      stacks[2].worker.postMessage(["swivel", stacks[2].imgIteration, stacks[2].cProjectionWidth, node0, node1, vector0_4, vector0_3, ip, centerRot, projections[stacks[2].cProjection], stacks[2].gain, stacks[2].bias]);
+    }
+    if (!notSagittal) {
+      stacks[3].update = true;
+      stacks[3].worker.postMessage(["swivel", stacks[3].imgIteration, stacks[3].cProjectionWidth, node0, node3, vector0_1, vector0_4, ip, centerRot, projections[stacks[3].cProjection], stacks[3].gain, stacks[3].bias]);
+    }
+  }
+
+  var first3D = true;
+  function createWorkers() {
+
+    setVectors();
+
+    var addXY = widthNode-1;
+    var addZ = slicesHalf-1;
+
+
+    for(i=1;i<=3;i++) {
+
+      // stacks[i].worker = new Worker("workersMPR.js?id="+Math.floor(Math.random() * 6000) + 1 );
+
+      //stacks[i].worker.postMessage(["setup", imagesData, stacks[i].oD, i, stacks[0].slices, slicesZ, stacks[0].width, stacks[0].height, stacks[i].width, stacks[i].height, addXY, addZ, ["Avg","MIP","MinIP","VR"]]);
+
+      setupImageData({
+        imagesData: imagesData, 
+        oD: stacks[i].oD,
+        stackNo: i,
+        slices0: stacks[0].slices,
+        iSlicesZ: slicesZ,
+        stacks0Width: stacks[0].width,
+        stacks0Height: stacks[0].height,
+        sWidth: stacks[i].width,
+        sHeight: stacks[i].height,
+        addXY: addXY,
+        addZ: addZ,
+        projections: ["Avg","MIP","MinIP","VR"]
+      });
+
+      // stacks[i].worker.onmessage = function(event) {
+      //   if (event.data[0] == "ready") {
+      //     //console.log(event.data[0]);
+      //     stacks[event.data[2]].workerReady = true;
+      //     if (stacks[1].workerReady && stacks[2].workerReady && stacks[3].workerReady)
+      //       ex3D();
+      //
+      //   }
+      //   if (event.data[0] == "swivel") {
+      //     // console.log(event.data[1][0]);
+      //     //console.log(newoD.data);
+      //
+      //
+      //     updateImage(event.data[1], event.data[2], event.data[3], event.data[4], 0);
+      //   }
+      //
+      // };
+
+    }
+
+
+  }
+
+
+
+
+  var tCanvas = document.createElement('canvas');
+
+  function updateImage(cData, stackNo, sliceStart, centerRot, n) {
+
+
+    ///////////////
+
+    var aggData; // = projectionImageData
+    aggData=ctx.createImageData(stacks[stackNo].width, stacks[stackNo].height);
+
+    for (var r=0;r<cData.length;r+=4) {
+      aggData.data[r] = cData[r];
+      aggData.data[r+1] = cData[r];
+      aggData.data[r+2] = cData[r];
+      aggData.data[r+3] = 255;
+    }
+
+
+    tCanvas.width = stacks[stackNo].width; // sWidth;
+    tCanvas.height = stacks[stackNo].height; //sHeight;
+    var tContext = tCanvas.getContext('2d');
+
+    tContext.putImageData(aggData,0,0);
+
+    stacks[stackNo].images[sliceStart] = new Image();
+    stacks[stackNo].images[sliceStart].src =  tCanvas.toDataURL("image/jpg");
+    stacks[stackNo].newLastImg = sliceStart;
+
+
+    stacks[stackNo].images[sliceStart].onload = function() {
+
+
+      //var y =  parseInt(new Date().getTime())-parseInt(r);
+      //console.log(stackNo+" HEJ: "+y);
+
+
+
+      if (stackNo == 1)
+        stacks[stackNo].cRot = corAngle;
+      if (stackNo == 2)
+        stacks[stackNo].cRot = axAngle;
+      if (stackNo == 3)
+        stacks[stackNo].cRot = sagAngle;
+
+      stacks[stackNo].update = false;
+      stacks[stackNo].lastImg = stacks[stackNo].newLastImg;
+
+      if (stackNo == 2) {
+        endTime =  parseInt(new Date().getTime())-parseInt(startTime);
+        console.log(endTime);
+      }
+
+      if (stacks[1].update == false && stacks[2].update == false && stacks[3].update == false) {
+        ex3DFlag = false;
+        if (first3D) {
+          first3D = false;
+          createMPR();
+        }
+        else
+          updateStacks(centerRot);
+      }
+
+
+    }
+
+
+  }
+
+
+  function lerp(x, x1, x2, q00, q01) {
+    return ((x2 - x) / (x2 - x1)) * q00 + ((x - x1) / (x2 - x1)) * q01;
+  }
+
+  function biLerp(x, y, q11, q12, q21, q22, x1, x2, y1, y2) {
+    r1 = lerp(x, x1, x2, q11, q21);
+    r2 = lerp(x, x1, x2, q12, q22);
+
+    return lerp(y, y1, y2, r1, r2);
+  }
+
+  function triLerp(x, y, z, q000, q001,  q010, q011, q100, q101, q110, q111, x1, x2, y1, y2, z1, z2) {
+
+    x00 = lerp(x, x1, x2, q000, q100);
+    x10 = lerp(x, x1, x2, q010, q110);
+    x01 = lerp(x, x1, x2, q001, q101);
+    x11 = lerp(x, x1, x2, q011, q111);
+    r0 = lerp(y, y1, y2, x00, x01);
+    r1 = lerp(y, y1, y2, x10, x11);
+
+    return lerp(z, z1, z2, r0, r1);
+  }
+
+
+  //
+
+  function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  }
+
+  function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+
+
+
+  document.body.addEventListener('keydown', function (e) {
+    if (typeof(stacks[1]) !== 'undefined') {
+
+    }
+    else
+      return;
+
+
+    arg = Math.PI/2;
+
+    if(e.keyCode == 69) {
+      rotateAxis(0,sagittalAxis, -arg);
+      ex3D();
+
+    }
+    if(e.keyCode == 82) {
+      rotateAxis(0,sagittalAxis, arg);
+      ex3D();
+
+    }
+    if(e.keyCode == 68) {
+      rotateAxis(1,coronalAxis, -arg);
+      ex3D();
+
+    }
+    if(e.keyCode == 70) {
+      rotateAxis(1,coronalAxis, arg);
+      ex3D();
+
+    }
+    if(e.keyCode == 67) {
+      rotateAxis(2,axialAxis, -arg);
+      ex3D();
+
+    }
+    if(e.keyCode == 86) {
+      rotateAxis(2,axialAxis, arg);
+      ex3D();
+
+    }
+
+    if(e.keyCode == 74) {
+      stacks[firstStack].imgIteration = stacks[firstStack].imgIteration-1;
+      ex3D();
+
+    }
+    if(e.keyCode == 77) {
+      stacks[firstStack].imgIteration = stacks[firstStack].imgIteration+1;
+      ex3D();
+    }
+
+    if(e.keyCode == 188) {
+      stacks[firstStack].imgIteration = stacks[firstStack].imgIteration+6;
+      ex3D();
+    }
+    if(e.keyCode == 75) {
+      stacks[firstStack].imgIteration = stacks[firstStack].imgIteration-6;
+      ex3D();
+    }
+
+
+    ctx.globalAlpha = 1;
+
+
+    console.log(e.keyCode+"---:");
+
+  });
+
+  var gain = 1;
+  var bias = 0;
+
+
+
+  function rotateHelper(workAngle, angle) {
+
+
+    var modAngle = workAngle;
+    if (workAngle < 0) {
+
+      modAngle = Math.PI*2-(-modAngle);
+
+    }
+
+
+
+    max = Math.max(angle, modAngle);
+    min = Math.min(angle, modAngle);
+    diff1 = max-min;
+    diff2 = (min+(Math.PI*2-max));
+    angleDiff = Math.min(diff1,diff2);
+
+
+    return [angleDiff, modAngle];
+
+  }
+
+
+
+  var lastClick = null;
+  var lastPos = 0;
+  var mouseDown = false;
+
+  var caliperArray = new Array();
+  canvas.addEventListener('mousemove', function(evt) {
+
+    //if (timeout)
+    //  return;
+
+    var update = false;
+    var mousePos = getMousePos(canvas, evt);
+    var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y + " ImgDat: " + ctx.getImageData(mousePos.x, mousePos.y, 1, 1).data[3];
+    //console.log(message);
+    var travel = mousePos.y-lastPos[1];
+
+    //console.log(travel);
+
+    lastPos = [mousePos.x,mousePos.y];
+
+
+    if (navMode == "caliper")
+    {
+      updateStacks();
+      return;
+
+    }
+
+
+
+    for (s=0;s<stackLayers.length;s++)  {
+      var i = stackLayers[s];
+
+      if (navMode == "rotate2" && firstStack == i && travel != 0 && lastClick != null && mouseDown && !ex3DFlag && !timeout )
+      {
+        var stackAngle;
+        if (i == 2)
+          stackAngle = axAngle;
+        if (i == 3)
+          stackAngle = sagAngle;
+        if (i == 1)
+          stackAngle = corAngle;
+
+        vector = [lastPos[0]-stacks[i].rotCenter[0], lastPos[1]-stacks[i].rotCenter[1]];
+        angleQuadrant = 0;
+        scalarProduct = -1*vector[0];
+        ll = Math.sqrt(vector[0]*vector[0]+vector[1]*vector[1]);
+
+        angle = Math.acos(scalarProduct/ll);
+        if (vector[0] >= 0 && vector[1] >= 0)
+          angle = Math.PI+(Math.PI-angle);
+        if (vector[0] < 0 && vector[1] >= 0)
+          angle = (6/4*Math.PI)+((Math.PI/2)-angle);
+
+
+        console.log(stackAngle+" : "+angle);
+
+
+
+
+
+        tWA1 = (stackAngle) % (2*Math.PI);
+        tWA2 = (stackAngle+Math.PI) % (2*Math.PI);
+
+        aD1 = rotateHelper(tWA1, angle);
+        aD2 = rotateHelper(tWA2, angle);
+
+        if (aD1[0] < aD2[0]) {
+
+          angleDiff = aD1[0];
+          workAngle = aD1[1];
+        }
+        else {
+
+          angleDiff = aD2[0];
+          workAngle = aD2[1];
+
+        }
+
+
+
+        if ((vector[0] < 0 && vector[1] > 0) && (workAngle >= 0 && workAngle < (Math.PI/2))) {
+          angleDiff = -angleDiff;
+        }
+        else if ((vector[0] < 0 && vector[1] < 0) && (workAngle > (Math.PI*6/4))){
+          angleDiff = angleDiff;
+        }
+        else {
+          if (angle > workAngle)
+            angleDiff = angleDiff;
+          else
+            angleDiff = -angleDiff;
+        }
+
+
+
+        if (stacks[i].name == "nAxial") {
+          //angleDiff = angle-axAngle;
+
+          rotateAxis(2,axialAxis, angleDiff);
+          //ex3D(false,true,false,false);
+
+          cAngle = axAngle;
+
+          if (ex3DFlag)
+            return;
+
+          syncCRL(i,cAngle,stacks[i].rotCenter,[1,3]);
+          syncStacks(i,"centerRot")
+
+        }
+        if (stacks[i].name == "sagittal") {
+          rotateAxis(0,sagittalAxis, angleDiff);
+          //ex3D(false,false,false,true);
+
+          cAngle = sagAngle;
+
+          if (ex3DFlag)
+            return;
+
+          syncCRL(i,cAngle,stacks[i].rotCenter,[2,1]);
+          syncStacks(i,"centerRot")
+        }
+        if (stacks[i].name == "coronal") {
+
+
+          rotateAxis(1,coronalAxis, -angleDiff);
+          //ex3D(false,false,true,false);
+
+
+          cAngle = corAngle;
+
+          if (ex3DFlag)
+            return;
+
+          syncCRL(i,cAngle,stacks[i].rotCenter,[2,3]);
+          syncStacks(i,"centerRot")
+
+        }
+
+
+
+      }
+      if (navMode == "rotate" && firstStack == i && travel != 0 && lastClick != null && mouseDown && !ex3DFlag && !timeout )
+      {
+
+
+        //ex3DFlag = true;
+        arg = Math.PI/180;
+
+
+        if (Math.abs(travel) >= 3) {
+
+          travel = travel * (10/Math.abs(travel));
+        }
+        console.log("travel "+travel);
+
+        if (stacks[i].name == "coronal") {
+          rotateAxis(1,coronalAxis, -arg*(-travel));
+          //ex3D(false,false,true,false);
+
+
+          cAngle = corAngle;
+
+          if (ex3DFlag)
+            return;
+
+          syncCRL(i,cAngle,stacks[i].rotCenter,[2,3]);
+          syncStacks(i,"centerRot")
+
+        }
+        if (stacks[i].name == "sagittal") {
+          rotateAxis(0,sagittalAxis, -arg*(-travel));
+          //ex3D(false,false,false,true);
+
+          cAngle = sagAngle;
+
+          if (ex3DFlag)
+            return;
+
+          syncCRL(i,cAngle,stacks[i].rotCenter,[2,1]);
+          syncStacks(i,"centerRot")
+        }
+        if (stacks[i].name == "nAxial") {
+          rotateAxis(2,axialAxis, -arg*(-travel));
+          //ex3D(false,true,false,false);
+
+          cAngle = axAngle;
+
+          if (ex3DFlag)
+            return;
+
+          syncCRL(i,cAngle,stacks[i].rotCenter,[1,3]);
+          syncStacks(i,"centerRot")
+
+        }
+
+
+
+
+
+
+
+
+
+        return;
+      }
+      if (navMode == "bias" && firstStack == i && travel != 0 && lastClick != null)
+      {
+        if (ex3DFlag)
+          return;
+        stacks[i].bias-= Math.round(travel*1.5);
+
+        //if (stacks[i].bias < 0)
+        //  stacks[i].bias = 0;
+        if (i==2)
+          ex3D(false,false,true,true);
+        if (i==1)
+          ex3D(false,true,false,true);
+        if (i==3)
+          ex3D(false,true,true,false);
+      }
+      if (navMode == "gain" && firstStack == i && travel != 0 && lastClick != null)
+      {
+        if (ex3DFlag)
+          return;
+        if (travel<0)
+          stacks[i].gain+=0.1;
+        else
+          stacks[i].gain-=0.1;
+
+        if (stacks[i].gain <= 0)
+          stacks[i].gain = 0.01;
+
+        console.log(stacks[i].gain);
+
+        if (i==2)
+          ex3D(false,false,true,true);
+        if (i==1)
+          ex3D(false,true,false,true);
+        if (i==3)
+          ex3D(false,true,true,false);
+
+
+      }
+
+      if (navMode == "scroll" && firstStack == i && travel != 0 && lastClick != null)
+      {
+        if (stacks[i].update == false) {
+
+
+          changeSlice(firstStack,-travel);
+        }
+      }
+      if (navMode == "pan" && firstStack == i && lastClick != null && stacks[i].offset != null) {
+        stacks[i].x = mousePos.x-stacks[i].offset.x;
+        stacks[i].y = mousePos.y-stacks[i].offset.y;
+        update = true;
+      }
+      if (navMode == "zoom" && firstStack != 0 && firstStack != null && travel != 0 && lastClick != null)
+      {
+        var cWidth = stacks[firstStack].zoom*stacks[firstStack].width;
+        var cHeight = stacks[firstStack].zoom*stacks[firstStack].height;
+
+
+
+
+        if ((stacks[firstStack].zoom+(0.05*(travel/Math.abs(travel))))*stacks[firstStack].width < 100 ) {
+
+          targetZoom = 100 / stacks[firstStack].width;
+          stacks[firstStack].zoom = targetZoom;
+
+        }
+        else {
+          stacks[firstStack].zoom = stacks[firstStack].zoom+(0.05*(travel/Math.abs(travel)));
+
+        }
+
+        var newWidth = stacks[firstStack].zoom*stacks[firstStack].width;
+        var newHeight = stacks[firstStack].zoom*stacks[firstStack].height;
+
+        var dWidth = (newWidth-cWidth)/2;
+        var dHeight = (newHeight-cHeight)/2;
+
+        stacks[firstStack].x = stacks[firstStack].x-dWidth;
+        stacks[firstStack].y = stacks[firstStack].y-dHeight;
+
+        update = true;
+
+      }
+
+      else if(firstStack == i && mousePos.x > stacks[i].x && mousePos.x < stacks[i].x+(stacks[i].width*stacks[i].zoom) && mousePos.y > stacks[i].y && mousePos.y < stacks[i].y+(stacks[i].height*stacks[i].zoom)  ) {
+
+        if (lastClick != null && navMode == "sync") {
+
+
+
+
+          var cAngle;
+
+
+          if (stacks[i].name == "nAxial") {
+            cAngle = axAngle;
+            syncCRL(i,cAngle,lastPos,[1,3]);
+          }
+          if (stacks[i].name == "coronal") {
+            cAngle = corAngle;
+            syncCRL(i,cAngle,lastPos,[2,3]);
+          }
+          if (stacks[i].name == "sagittal") {
+            //alert(1);
+            cAngle = sagAngle;
+            syncCRL(i,cAngle,lastPos,[2,1]);
+          }
+
+          if (!ex3DFlag) {syncStacks(i,null);}
+
+
+
+
+        } // end lastClick
+      } // end else if
+
+
+    }
+
+    if (update)
+      updateStacks();
+
+  }, false);
+
+
+  function syncCRL(i,cAngle,lastPos, whichStacks) {
+
+
+    //if (stacks[i].name == "coronal")
+    //  tAngle = -cAngle+Math.PI/2;
+    //else
+
+    tAngle = cAngle+Math.PI/2;
+
+    tAngle = parseFloat(tAngle.toFixed(10)) % parseFloat((Math.PI*2).toFixed(10));
+    tAngle = parseFloat(tAngle.toFixed(5));
+    //tAngle = parseFloat(tAngle.toFixed(5));
+
+    rotW = stacks[i].width*stacks[i].zoom;
+
+    var coords = getRotation2(rotW,tAngle+Math.PI/2);
+
+
+    var slope;
+
+
+
+
+
+    if (parseFloat(coords[2].toFixed(1)) == parseFloat(coords[0].toFixed(1)))
+      slope = "unlim";
+    else
+      slope = ((coords[3]-coords[1])/(coords[2]-coords[0]));
+
+    var center = [stacks[i].x+((stacks[i].width*stacks[i].zoom)/2-1),stacks[i].y+((stacks[i].height*stacks[i].zoom)/2-1)];
+
+    var point = [lastPos[0]-center[0],(lastPos[1]-center[1])]
+    var dist;
+
+    var testVal;
+    if (slope == "unlim") {
+
+      if (tAngle == 0) {
+        dist = point[0]+(stacks[i].height*stacks[i].zoom)/2;
+        testVal = "ZERO";
+      }
+      else {
+        dist = -point[0]+(stacks[i].height*stacks[i].zoom)/2;
+        testVal = "NON---ZERO";
+      }
+
+    }
+    else {
+
+      if (((tAngle) <= Math.PI && tAngle > 0) || tAngle < -Math.PI ) { // || Math.abs(cAngle) > 3/4*Math.PI/2
+        dist = -(((slope*point[0]-1*point[1])/(Math.sqrt((slope*slope)+(1*1)))))+(stacks[i].height*stacks[i].zoom)/2;
+        testVal = "withIN "+dist;
+      }
+      else {
+        dist = (((slope*point[0]-1*point[1])/(Math.sqrt((slope*slope)+(1*1)))))+(stacks[i].height*stacks[i].zoom)/2;
+        testVal = "withOut "+dist;
+
+      }
+
+    }
+
+
+
+    var w = stacks[i].height*stacks[i].zoom;
+    var ratio = (dist/w);
+
+    //console.log(whichStacks[0]);
+
+
+    if (!ex3DFlag) {
+      if (ratio < 0) {ratio=0;}
+      if (ratio > 1) {ratio=1;}
+      stacks[whichStacks[0]].imgIteration = Math.round(stacks[whichStacks[0]].slices*ratio);
+    }
+
+
+
+    //if (stacks[i].name == "coronal")
+    //    tAngle = -cAngle;
+    //else
+    tAngle = cAngle;
+
+
+    tAngle = parseFloat(tAngle.toFixed(10)) % parseFloat((Math.PI*2).toFixed(10));
+    tAngle = parseFloat(tAngle.toFixed(5));
+
+
+    //console.log("HIL "+(Math.PI*2).toFixed(8)+ " "+coords[0].toFixed(1));
+
+    rotW = stacks[i].height*stacks[i].zoom;
+
+    var coords = getRotation2(rotW,tAngle+Math.PI/2);
+
+
+    var slope;
+
+    if (parseFloat(coords[2].toFixed(1)) == parseFloat(coords[0].toFixed(1)))
+      slope = "unlim";
+    else
+      slope = ((coords[3]-coords[1])/(coords[2]-coords[0]));
+
+    var center = [stacks[i].x+((stacks[i].width*stacks[i].zoom)/2-1),stacks[i].y+((stacks[i].height*stacks[i].zoom)/2-1)];
+
+    var point = [lastPos[0]-center[0],(lastPos[1]-center[1])]
+    var dist;
+
+
+    if (slope == "unlim") {
+
+      if (tAngle == 0)
+        dist = point[0]+(stacks[i].width*stacks[i].zoom)/2;
+      else
+        dist = -point[0]+(stacks[i].width*stacks[i].zoom)/2;
+
+    }
+    else {
+
+      if (((tAngle) < Math.PI && tAngle > 0) || tAngle < -Math.PI ) // || Math.abs(cAngle) > 3/4*Math.PI/2
+        dist = -(((slope*point[0]-1*point[1])/(Math.sqrt((slope*slope)+(1*1)))))+(stacks[i].width*stacks[i].zoom)/2;
+      else
+        dist = (((slope*point[0]-1*point[1])/(Math.sqrt((slope*slope)+(1*1)))))+(stacks[i].width*stacks[i].zoom)/2;
+
+    }
+
+
+
+    var w = stacks[i].width*stacks[i].zoom;
+    var ratio = (dist/w);
+
+    // console.log(axAngle+" cA "+tAngle+" C: " + center+" LastPos "+lastPos+" Coords "+coords+" Slope "+slope+ " point "+point+" dist "+dist+ " w "+w+ " ratio "+ratio+ " TV "+""+" PI*1 "+ Math.PI);
+
+
+    //console.log(tAngle+" C: " + center+" LastPos "+lastPos+" Coords "+coords+" Slope "+slope+ " point "+point+" dist "+dist+ " w "+w+ " ratio "+ratio);
+    //console.log(whichStacks[0]);
+
+
+    if (!ex3DFlag) {
+      if (ratio < 0) {ratio=0;}
+      if (ratio > 1) {ratio=1;}
+      stacks[whichStacks[1]].imgIteration = Math.round(stacks[whichStacks[1]].slices*ratio);
+    }
+
+
+
+
+
+  }
+
+
+  canvas.addEventListener('mousedown', function(evt) {
+    if (timeout)
+      return;
+    var mousePos = getMousePos(canvas, evt);
+    var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y + " ImgDat: " + ctx.getImageData(mousePos.x, mousePos.y, 1, 1).data[3];
+
+    mouseDown = true;
+    lastClick = mousePos;
+
+    for (s=0;s<stackLayers.length;s++) {
+
+      var i = stackLayers[s];
+      if(mousePos.x > stacks[i].x && mousePos.x < stacks[i].x+(stacks[i].width*stacks[i].zoom) && mousePos.y > stacks[i].y && mousePos.y < stacks[i].y+(stacks[i].height*stacks[i].zoom)  ) {
+        firstStack = i;
+        updateLayers(i);
+
+
+        stacks[i].offset = {
+          x: mousePos.x - stacks[i].x,
+          y: mousePos.y - stacks[i].y
+        }
+        // if (!timeout)
+
+        if (navMode == "caliper") {
+
+          //if (caliperArray.length>0)
+          //alert(caliperArray[0][2]+" "+caliperArray.length);
+
+          if (caliperArray.length > 0) {
+            if (caliperArray[0][2] != firstStack) {
+
+              caliperArray = new Array();
+              updateStacks();
+
+              return;
+            }
+          }
+
+
+          if (caliperArray.length == 0) {
+            caliperArray.push(lastPos);
+            caliperArray[0][2] = firstStack;
+          }
+          else
+            caliperArray.push(lastPos);
+
+          if (caliperArray.length > 2)
+            caliperArray = new Array();
+
+        }
+
+
+        updateStacks();
+        return;
+      }
+    }
+    caliperArray = new Array();
+
+    updateStacks();
+
+
+
+
+  }, false);
+
+  var timeout = false;
+
+  canvas.addEventListener('mouseup', function(evt) {
+    //console.log("up "+ex3DFlag);
+    var mousePos = getMousePos(canvas, evt);
+    var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y + " ImgDat: " + ctx.getImageData(mousePos.x, mousePos.y, 1, 1).data[3];
+    mouseDown = false;
+    lastClick = null;
+
+    if (navMode == "rotate" && firstStack > -1) {
+      //ex3D(false,stacks[firstStack].name == "coronal",stacks[firstStack].name == "nAxial");
+      //ex3D();
+      //setTimeout(ex3D(), 10000)
+      if (!timeout) {
+        //console.log("time");
+        timeout = true;
+
+
+        setTimeout(function(){timeout = false;},100);
+
+
+
+        //setTimeout(function(){ex3D(true);},10);
+
+
+        if (firstStack == 2)
+          setTimeout(function(){ex3D(true,true,false,false);},1);
+        if (firstStack == 1)
+          setTimeout(function(){ex3D(true,false,true,false);},1);
+        if (firstStack == 3)
+          setTimeout(function(){ex3D(true,false,false,true);},1);
+
+      }
+    }
+    if (navMode == "rotate2" && firstStack > -1) {
+
+      if (!timeout) {
+        //console.log("time");
+        timeout = true;
+
+
+        setTimeout(function(){timeout = false;},100);
+
+
+
+        //setTimeout(function(){ex3D(true);},10);
+
+
+        if (firstStack == 2)
+          setTimeout(function(){ex3D(true,true,false,false);},1);
+        if (firstStack == 1)
+          setTimeout(function(){ex3D(true,false,true,false);},1);
+        if (firstStack == 3)
+          setTimeout(function(){ex3D(true,false,false,true);},1);
+
+      }
+    }
+    else {
+      if (navMode == "scroll" || navMode == "bias" || navMode == "gain") {
+
+        if (firstStack == 2)
+          ex3D(true,false,true,true);
+        if (firstStack == 1)
+          setTimeout(function(){ex3D(true,true,false,true);},1);
+        if (firstStack == 3)
+          setTimeout(function(){ex3D(true,true,true,false);},1);
+
+      }
+      if (navMode == "sync") {
+        if (firstStack == 2)
+          setTimeout(function(){ex3D(true,true,false,false);},1);
+        if (firstStack == 1)
+          setTimeout(function(){ex3D(true,false,true,false);},1);
+        if (firstStack == 3)
+          setTimeout(function(){ex3D(true,false,false,true);},1);
+      }
+    }
+
+
+    for (i=0;i<stacks.length;i++) {
+      stacks[i].offset = null;
+    }
+
+  }, false);
+
+  canvas.addEventListener('mouseout', function(evt) {
+    lastClick = null;
+    updateStacks();
+  }, false);
+
+
+  window.addEventListener('DOMMouseScroll', scrollMouse);
+  window.addEventListener("mousewheel", scrollMouse, false);
+
+  function scrollMouse(e) {
+
+
+    var delta = e.wheelDelta ? e.wheelDelta : -e.detail;
+    if (firstStack != null) {
+      changeSlice(firstStack,delta/Math.abs(delta));
+      //updateStacks();
+    }
+
+  }
+
+  function syncStacks(i,centerRot) {
+
+    if (ex3DFlag) {
+      //console.log("notFinished");
+      return;
+    }
+
+    //stacks[3].imgIteration = Math.round(stacks[3].slices*ratio);
+
+    if (stacks[i].name == "nAxial")
+      ex3D(false,true,false,false,centerRot);
+
+    if (stacks[i].name == "coronal")
+      ex3D(false,false,true,false,centerRot);
+
+    if (stacks[i].name == "sagittal")
+      ex3D(false,false,false,true,centerRot);
+
+  }
+
+
+  function changeSlice(i,fac)  {
+    if (ex3DFlag) {
+      //console.log("notFinished");
+      return;
+    }
+
+    if (Math.abs(fac) >= 3) {
+
+      fac = fac * (15/Math.abs(fac));
+    }
+
+
+    //console.log("notFinished "+fac);
+    //stacks[i].imgIteration = stacks[i].imgIteration-(fac/Math.abs(fac));
+
+    stacks[i].imgIteration = stacks[i].imgIteration-(fac);
+
+    if (stacks[i].imgIteration < 0)
+      stacks[i].imgIteration = stacks[i].slices - 1;
+    if (stacks[i].imgIteration > stacks[i].slices - 1)
+      stacks[i].imgIteration = 0;
+
+    if (ex3DFlag) {
+      return;
+    }
+
+
+    if (stacks[i].name == "coronal")
+      ex3D(false,true,false,true);
+    if (stacks[i].name == "sagittal")
+      ex3D(false,true,true,false);
+    if (stacks[i].name == "nAxial")
+      ex3D(false,false,true,true);
+
+
+
+  }
+
+
+
+
+  function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+  }
+
+
+
+
+  function updateLayers(val) {
+
+    var placeHolder = null;
+    for (i=0;i<stackLayers.length;i++) {
+      if (stackLayers[i] == val) {
+        placeHolder = [i,val];
+
+      }
+
+    }
+
+    for (p = placeHolder[0]-1;p >= 0; p--) {
+      stackLayers[p+1] = stackLayers[p];
+    }
+    stackLayers[0] = placeHolder[1];
+
+  }
+
+  var projections = ["Avg","MIP","MinIP","VR"]
+  var cProjection = 0;
+
+
+  function setProjectionStack(no) {
+    stacks[no].cProjection++;
+    if (stacks[no].cProjection > 3)
+      stacks[no].cProjection = 0;
+    //document.getElementById("projectionLabel").innerHTML = projections[cProjection];
+
+    ex3D(true);
+  }
+
+  function setProjection() {
+
+    if (firstStack != null)
+      setProjectionStack(firstStack);
+
+    cProjection++;
+    if (cProjection > 2)
+      cProjection = 0;
+    //document.getElementById("projectionLabel").innerHTML = projections[cProjection];
+
+    ex3D(true);
+  }
+
+
+  function setProjectionWidthStack(no,w) {
+    if (no == null)
+      return;
+
+
+    stacks[no].cProjectionWidth+=w;
+
+    if (stacks[no].cProjectionWidth <= 0)
+      stacks[no].cProjectionWidth = 1;
+
+
+
+    ex3D(true);
+  }
+
+
+  var interpolate = false;
+
+  function toggleInterpolation() {
+
+    interpolate = !interpolate;
+
+    if (interpolate)
+      document.getElementById("interpolateButton").style.color = "#000000";
+    else
+      document.getElementById("interpolateButton").style.color = "#9a9a9a";
+
+    ex3D();
+  }
+
+  function toolbarMenuChoice(mode) {
+    var toolbarButtons = ["scroll","pan","zoom","rotate","rotate2","sync","bias","gain","caliper"];
+
+    for(i=0;i<toolbarButtons.length;i++) {
+      if (toolbarButtons[i] == mode)
+        document.getElementById(toolbarButtons[i]+"Button").style.color = "#000000";
+      else
+        document.getElementById(toolbarButtons[i]+"Button").style.color = "#9a9a9a";
+
+
+
+    }
+
+    document.getElementById(mode+"Button").style.color = "black"
+    navMode = mode;
+    caliperArray = new Array();
+    updateStacks();
+
+  }
+
+
+
+  $(function() {
+
+    $( "#dialog" ).dialog({
+      autoOpen: false,
+      modal: true,
+      buttons: {
+        "Generate MPR": function() {
+          setInput();
+
+        }
+
+      }
+
+
+    });
+
+
+    $( "#toolbar" ).draggable({
+      containment: "parent", scroll: false,
+      stop: function( event, ui ) {
+
+
+
+
+
+
+      },
+      drag: function( event, ui ) {
+
+
+
+
+      },
+      create: function( event, ui ) {
+
+        $( "#toolbar" ).position({
+          my: "center top",
+          at: "left+" + (window.innerWidth/2) + " top+5",
+          of: window
+        });
+
+
+      }
+
+    });
+  });
+
+  //var rotateYAxis = function() {
+
+  function rotateAxis(no,currentAxis,cAngle) {
+
+    if (no == 0) {
+      sagAngle += cAngle;
+    }
+    else if (no == 1) {
+      corAngle -= cAngle;
+    }
+    else if (no == 2) {
+      axAngle += cAngle;
+    }
+
+    for (var n=0; n<nodes.length; n++) {
+
+      var node = nodes[n];
+      var x = node[0];
+      var y = node[1];
+      var z = node[2];
+
+      var p = [0,x,y,z]; // point
+      var rotQuat = ang(currentAxis, cAngle); // rotation axis
+      var invQuat = inv(rotQuat);
+      var rotQuat = norm(rotQuat);
+      var qp = mul(rotQuat,p);
+      var qpq_inv = mul(qp,invQuat);
+
+      node[0] = parseFloat(qpq_inv[1].toFixed(3));
+      node[1] = parseFloat(qpq_inv[2].toFixed(3));
+      node[2] = parseFloat(qpq_inv[3].toFixed(3));
+    }
+
+
+  };
+
+
+  var rotateY3D = function(theta, reset) {
+
+    if (reset)
+      yAngle = theta;
+    else
+      yAngle = yAngle + theta;
+
+    var sin_t = Math.sin(theta);
+    var cos_t = Math.cos(theta);
+
+
+
+    for (var n=0; n<nodes.length; n++) {
+      var node = nodes[n];
+      var x = node[0];
+      var z = node[2];
+      node[0] = x * cos_t - z * sin_t;
+      node[2] = z * cos_t + x * sin_t;
+    }
+  };
+
+  var rotateX3D = function(theta,reset) {
+
+    if (reset)
+      xAngle = theta;
+    else
+      xAngle = xAngle + theta;
+
+
+    var sin_t = Math.sin(theta);
+    var cos_t = Math.cos(theta);
+
+    for (var n=0; n<nodes.length; n++) {
+      var node = nodes[n];
+      var y = node[1];
+      var z = node[2];
+      node[1] = y * cos_t - z * sin_t;
+      node[2] = z * cos_t + y * sin_t;
+    }
+  };
+
+
+
+
+  var rotateZ3D = function(theta, reset) {
+    if (reset)
+      zAngle = theta;
+    else
+      zAngle = zAngle + theta;
+
+    var sin_t = Math.sin(theta);
+    var cos_t = Math.cos(theta);
+
+    for (var n=0; n<nodes.length; n++) {
+      var node = nodes[n];
+      var x = node[0];
+      var y = node[1];
+      node[0] = x * cos_t - y * sin_t;
+      node[1] = y * cos_t + x * sin_t;
+    }
+  };
+
+
+  var translate3D = function(trans) {
+
+    for (var n=0; n<nodes.length; n++) {
+      var node = nodes[n];
+
+      node[0] = node[0] + trans[0];
+      node[1] = node[1] + trans[1];
+      node[2] = node[2] + trans[2];
+    }
+  };
+
+
+  function ang(axis, angle, out) {
+    out = new Array();
+    var x = axis[0], y = axis[1], z = axis[2];
+    var r = 1/Math.sqrt(x*x + y*y + z*z);
+    var s = Math.sin(angle/2);
+    out[0] = Math.cos(angle/2);
+    out[1] = s * x * r;
+    out[2] = s * y * r;
+    out[3] = s * z * r;
+    return out;
+  };
+
+  function norm(q) {
+    out = new Array();
+    var a = q[0], b = q[1], c = q[2], d = q[3];
+    var rlen = 1 / lengQ(q);
+    return scal(q, rlen);
+  };
+
+  function lengQ(q) {
+    var a = q[0], b = q[1], c = q[2], d = q[3];
+    return Math.sqrt(a*a + b*b + c*c + d*d);
+  };
+
+  function scal(q, x) {
+    out = new Array();
+    var a = q[0], b = q[1], c = q[2], d = q[3];
+
+    out[0] = a*x;
+    out[1] = b*x;
+    out[2] = c*x;
+    out[3] = d*x;
+    return out;
+  };
+
+  function inv(q) {
+    out = new Array();
+    var a = q[0], b = q[1], c = q[2], d = q[3];
+    var r = 1 / (a*a + b*b + c*c + d*d);
+    out[0] = a*r;
+    out[1] = -b*r;
+    out[2] = -c*r;
+    out[3] = -d*r;
+    return out;
+  };
+
+  function mul(q1, q2) {
+    out = new Array();
+
+    var a1 = q1[0], a2 = q2[0],
+      b1 = q1[1], b2 = q2[1],
+      c1 = q1[2], c2 = q2[2],
+      d1 = q1[3], d2 = q2[3];
+
+    out[0] = a1*a2 - b1*b2 - c1*c2 - d1*d2;
+    out[1] = a1*b2 + b1*a2 + c1*d2 - d1*c2;
+    out[2] = a1*c2 - b1*d2 + c1*a2 + d1*b2;
+    out[3] = a1*d2 + b1*c2 - c1*b2 + d1*a2;
+    return out;
+  };
+
+
+
+  $(function() {
+
+
+  });
+
+
+  function line_intersect(x1, y1, x2, y2, x3, y3, x4, y4)
+  {
+    var ua, ub, denom = (y4 - y3)*(x2 - x1) - (x4 - x3)*(y2 - y1);
+    if (denom == 0) {
+      return null;
+    }
+    ua = ((x4 - x3)*(y1 - y3) - (y4 - y3)*(x1 - x3))/denom;
+    ub = ((x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3))/denom;
+    return {
+      x: x1 + ua*(x2 - x1),
+      y: y1 + ua*(y2 - y1),
+      seg1: ua >= 0 && ua <= 1,
+      seg2: ub >= 0 && ub <= 1
+    };
+  }
+
+
+  function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+  }
+
+
+</script>
+
+
+</html>

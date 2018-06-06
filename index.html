@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<body>
+  <canvas id="left-canvas"></canvas>
+  <canvas id="middle-canvas" width="512" height="512"></canvas>
+  <canvas id="right-canvas"></canvas>
+</body>
+<script src="node_modules/gpu.js/bin/gpu.js"></script>
+<script>
+  // get canvases
+  var leftCanvas = document.getElementById('left-canvas');
+  var middleCanvas = document.getElementById('middle-canvas');
+  var rightCanvas = document.getElementById('right-canvas');
+
+  // create gpu's
+  var leftGpu = new GPU({ canvas: leftCanvas });
+  var middleGpu = new GPU({ canvas: middleCanvas });
+  var rightGpu = new GPU({ canvas: rightCanvas });
+
+  // create kernels
+  var leftKernel;
+  var middleKernel;
+  var rightKernel;
+
+  // get images
+  var imagesLoadedCount = 0;
+  var imageCount = 237;
+  var images = [];
+
+  startupApp();
+
+  function startupApp() {
+    getImages();
+  }
+  function onloadImage() {
+    imagesLoadedCount++;
+    if (imagesLoadedCount === imageCount) {
+      imagesLoaded(images);
+    }
+  }
+  function getImages() {
+    for (var i = 1; i <= imageCount; i++) {
+      var image = document.createElement('img');
+      image.src = 'stacks/axial' + i + '.jpg';
+      image.onload = onloadImage;
+      images.push(image);
+    }
+  }
+  function imagesLoaded() {
+    setupKernels();
+    runKernels(images);
+  }
+  function setupKernels() {
+    // create kernels
+    leftKernel = leftGpu.createKernel(function(images, axis) {
+      var pixel = images[this.thread.y][axis][this.thread.x];
+      this.color(pixel[0], pixel[1], pixel[2], pixel[3]);
+    }, {
+      graphical: true,
+      output: [512, imageCount],
+      canvas: leftCanvas
+    });
+    middleKernel = middleGpu.createKernel(function(images, axis) {
+      var pixel = images[axis][this.thread.y][this.thread.x];
+      this.color(pixel[0], pixel[1], pixel[2], pixel[3]);
+    }, {
+      graphical: true,
+      output: [512, 512],
+      canvas: middleCanvas
+    });
+    rightKernel = rightGpu.createKernel(function(images, axis) {
+      var pixel = images[this.thread.x][this.thread.y][axis];
+      this.color(pixel[0], pixel[1], pixel[2], pixel[3]);
+    }, {
+      graphical: true,
+      output: [imageCount, 512],
+      canvas: rightCanvas
+    });
+  }
+  function runKernels(images) {
+    leftKernel(images, parseInt(imageCount / 3));
+    middleKernel(images, parseInt(imageCount / 3));
+    rightKernel(images, parseInt(imageCount / 3));
+  }
+</script>
+</html>
